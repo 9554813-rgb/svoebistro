@@ -1,4 +1,7 @@
-<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><title>Своё бистро — в стиле Flavoria</title><meta name="description" content="Бистро с пекарней в Новоселье: выпечка, завтраки и любимые блюда. Доставка и самовывоз."><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;1,600&family=Marck+Script&family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet"><style>
+<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><title>Своё бистро — в стиле Flavoria</title><meta name="description" content="Бистро с пекарней в Новоселье: выпечка, завтраки и любимые блюда. Доставка и самовывоз."><script>/* ===== АДРЕС СЕРВЕРА ЗАКАЗОВ =====
+   Вставьте между кавычками ссылку веб-приложения Google Apps Script (…/exec).
+   Пусто — сайт работает в демо-режиме, заказы никуда не уходят. */
+window.API_URL = '';</script><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;1,600&family=Marck+Script&family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet"><style>
 *{box-sizing:border-box}html{scroll-behavior:smooth;scroll-padding-top:80px}
 html,body{overflow-x:clip}
 body{margin:0;-webkit-font-smoothing:antialiased}
@@ -233,7 +236,8 @@ h1,h2,h3,h4{font-family:'Playfair Display',serif;font-weight:600;line-height:1.0
     <h3>Забронируйте столик</h3>
     <div class="bf2"><label class="bf"><span class="sr">Дата</span><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M9 3v4M15 3v4"/></svg><input type="date" id="bDate" required></label><label class="bf"><span class="sr">Время</span><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><select id="bTime" required></select></label></div>
     <label class="bf"><span class="sr">Количество гостей</span><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M3 20a6 6 0 0 1 12 0M16 4.5a3.5 3.5 0 0 1 0 7M18 20a6 6 0 0 0-3-5.2"/></svg><select id="bGuests"><option>1 гость</option><option selected>2 гостя</option><option>3 гостя</option><option>4 гостя</option><option>5 гостей</option><option>6+ гостей</option></select></label>
-    <label class="bf"><span class="sr">Телефон</span><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/></svg><input type="tel" id="bPhone" placeholder="+7 (___) ___-__-__" inputmode="tel" required></label>
+    <div class="bf2"><label class="bf"><span class="sr">Имя</span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg><input type="text" id="bName" placeholder="Имя" autocomplete="given-name"></label><label class="bf"><span class="sr">Телефон</span><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/></svg><input type="tel" id="bPhone" placeholder="+7 (___) ___-__-__" inputmode="tel" autocomplete="tel" required></label></div>
+    <input type="text" id="bWeb" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px">
     <label class="chk sm"><input type="checkbox" id="bOk"><span>Согласен(на) на обработку персональных данных</span></label>
     <button class="btn full" type="submit">Забронировать</button><p class="bmsg" id="bMsg" role="status"></p>
   </form>
@@ -277,13 +281,20 @@ window.AFTER = function(){
   fillT(); dIn.addEventListener('change', fillT);
   const ph = $('#bPhone');
   ph.addEventListener('focus', () => { if (!ph.value) ph.value = '+7 '; });
-  ph.addEventListener('input', () => { let d = ph.value.replace(/\D/g,''); if (d[0]==='7'||d[0]==='8') d = d.slice(1); d = d.slice(0,10); let r = '+7'; if (d.length) r += ' (' + d.slice(0,3); if (d.length >= 3) r += ') ' + d.slice(3,6); if (d.length >= 6) r += '-' + d.slice(6,8); if (d.length >= 8) r += '-' + d.slice(8,10); ph.value = r; });
+  ph.addEventListener('input', () => { let d = ph.value.replace(/\D/g,''); if (d[0]==='7'||d[0]==='8') d = d.slice(1); if (d.length > 10 && (d[0]==='7'||d[0]==='8')) d = d.slice(1); d = d.slice(0,10); let r = '+7'; if (d.length) r += ' (' + d.slice(0,3); if (d.length >= 3) r += ') ' + d.slice(3,6); if (d.length >= 6) r += '-' + d.slice(6,8); if (d.length >= 8) r += '-' + d.slice(8,10); ph.value = r; });
   $('#bookForm').addEventListener('submit', e => { e.preventDefault(); const m = $('#bMsg');
     const okP = ph.value.replace(/\D/g,'').length === 11; ph.closest('.bf').classList.toggle('bad', !okP);
     if (!okP){ m.className = 'bmsg err'; m.textContent = 'Проверьте номер телефона'; return; }
     if (!tIn.value){ m.className = 'bmsg err'; m.textContent = 'Выберите другой день'; return; }
     if (!$('#bOk').checked){ m.className = 'bmsg err'; m.textContent = 'Нужно согласие на обработку данных'; return; }
-    m.className = 'bmsg'; m.textContent = `Заявка принята: ${dIn.value.split('-').reverse().join('.')} в ${tIn.value}, ${$('#bGuests').value}. Мы перезвоним для подтверждения. (Демо — заявка никуда не отправлена.)`; });
+    const btn = e.target.querySelector('button[type=submit]'), when = `${dIn.value.split('-').reverse().join('.')} в ${tIn.value}, ${$('#bGuests').value}`;
+    if (!window.API_URL){ m.className = 'bmsg'; m.textContent = `Заявка принята: ${when}. Мы перезвоним для подтверждения. (Демо — заявка никуда не отправлена.)`; return; }
+    btn.disabled = true; btn.textContent = 'Отправляем…'; m.textContent = '';
+    fetch(window.API_URL, { method:'POST', headers:{ 'Content-Type':'text/plain;charset=utf-8' }, body: JSON.stringify({ type:'booking', date:dIn.value, time:tIn.value, guests:$('#bGuests').value, name:$('#bName').value.trim(), phone:ph.value, website:$('#bWeb').value }) })
+      .then(r => r.json()).then(j => { if (!j.ok) throw new Error(j.error || 'Ошибка сервера');
+        m.className = 'bmsg'; m.textContent = `Заявка ${j.number} принята: ${when}. Мы перезвоним для подтверждения.`; e.target.reset(); dIn.value = iso(new Date()); fillT(); })
+      .catch(err => { m.className = 'bmsg err'; m.textContent = `Не получилось отправить (${err.message}). Позвоните нам: ${window.DATA.cfg.phone}`; })
+      .finally(() => { btn.disabled = false; btn.textContent = 'Забронировать'; }); });
   $('#subForm').addEventListener('submit', e => { e.preventDefault(); const v = $('#subMail').value.trim(), m = $('#subMsg');
     if (!/^\S+@\S+\.\S+$/.test(v)){ m.className = 'bmsg err'; m.textContent = 'Проверьте e-mail'; return; }
     m.className = 'bmsg'; m.textContent = 'Спасибо! (Демо — подписка не сохранена.)'; });
@@ -410,6 +421,7 @@ function renderForm(){
    <div class="fld" id="fa" ${form.method === 'pickup' ? 'hidden' : ''}><label for="fad">Адрес в Новоселье</label><input type="text" id="fad" autocomplete="street-address" placeholder="Улица, дом, подъезд, квартира"><div class="er" id="ea"></div></div>
    <div class="two"><div class="fld"><label for="fd">Дата</label><input type="date" id="fd" min="${todayISO()}" value="${todayISO()}"></div><div class="fld"><label for="ft">Время</label><select id="ft">${times(todayISO())}</select></div></div>
    <div class="fld"><label for="fc">Комментарий</label><textarea id="fc" placeholder="Домофон, приборы, прожарка…"></textarea></div>
+   <input type="text" id="fw" name="website" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px">
    <div class="fld"><label class="chk"><input type="checkbox" id="fk"><span>Согласен(на) на обработку персональных данных по <a href="${D.cfg.privacy}" target="_blank" rel="noopener">политике конфиденциальности</a></span></label><div class="er" id="ek"></div></div>
   </form>`;
   $('#drF').innerHTML = `<div id="sb"></div><p class="warn" id="se" hidden></p><button class="go" type="submit" form="of" id="sbtn">Отправить заказ</button>`;
@@ -420,7 +432,7 @@ function renderForm(){
     if (e.target.id === 'fd') $('#ft').innerHTML = times(e.target.value || todayISO());
   });
   $('#fp').addEventListener('focus', e => { if (!e.target.value) e.target.value = '+7 '; });
-  $('#fp').addEventListener('input', e => { let d = e.target.value.replace(/\D/g, ''); if (d[0] === '7' || d[0] === '8') d = d.slice(1); d = d.slice(0, 10); let r = '+7'; if (d.length) r += ' (' + d.slice(0, 3); if (d.length >= 3) r += ') ' + d.slice(3, 6); if (d.length >= 6) r += '-' + d.slice(6, 8); if (d.length >= 8) r += '-' + d.slice(8, 10); e.target.value = r; });
+  $('#fp').addEventListener('input', e => { let d = e.target.value.replace(/\D/g, ''); if (d[0] === '7' || d[0] === '8') d = d.slice(1); if (d.length > 10 && (d[0] === '7' || d[0] === '8')) d = d.slice(1); d = d.slice(0, 10); let r = '+7'; if (d.length) r += ' (' + d.slice(0, 3); if (d.length >= 3) r += ') ' + d.slice(3, 6); if (d.length >= 6) r += '-' + d.slice(6, 8); if (d.length >= 8) r += '-' + d.slice(8, 10); e.target.value = r; });
   f.addEventListener('submit', submit);
   $('#drB').scrollTop = 0;
 }
@@ -435,11 +447,27 @@ async function submit(e){
   const s = sub(), se = $('#se');
   if (form.method === 'delivery' && s < D.cfg.delivery.minOrder){ se.hidden = false; se.textContent = `Минимум на доставку — ${fmt(D.cfg.delivery.minOrder)}. Добавьте ещё ${fmt(D.cfg.delivery.minOrder - s)} или выберите самовывоз.`; return; }
   const first = Object.keys(er)[0]; if (first){ $({ n:'#fn', p:'#fp', a:'#fad', k:'#fk' }[first]).focus(); return; }
-  const btn = $('#sbtn'); btn.disabled = true; btn.textContent = 'Отправляем…';
-  await new Promise(r => setTimeout(r, 600));            // ДЕМО: здесь подключается отправка заказа
-  const no = `${String(new Date().getDate()).padStart(2,'0')}${String(new Date().getMonth() + 1).padStart(2,'0')}-${Math.floor(1000 + Math.random() * 9000)}`;
+  const btn = $('#sbtn'); btn.disabled = true; btn.textContent = 'Отправляем…'; se.hidden = true;
+  let no;
+  if (window.API_URL){
+    // Отправка заказа на сервер (Google Apps Script). Цены сервер пересчитает сам.
+    try {
+      const r = await fetch(window.API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify({ type: 'order', method: form.method, name: v.name, phone: v.phone, address: v.addr, date: v.date, time: v.time,
+          comment: $('#fc').value.trim(), website: $('#fw') ? $('#fw').value : '', items: Object.entries(cart).map(([id, q]) => ({ id, q })) }) });
+      const j = await r.json();
+      if (!j.ok) throw new Error(j.error || 'Ошибка сервера');
+      no = j.number;
+    } catch(err){
+      se.hidden = false; se.textContent = `Не получилось отправить заказ (${err.message}). Попробуйте ещё раз или позвоните: ${D.cfg.phone}`;
+      btn.disabled = false; btn.textContent = 'Отправить заказ'; return;
+    }
+  } else {
+    await new Promise(r => setTimeout(r, 600));          // ДЕМО: адрес сервера не указан
+    no = `${String(new Date().getDate()).padStart(2,'0')}${String(new Date().getMonth() + 1).padStart(2,'0')}-${Math.floor(1000 + Math.random() * 9000)}`;
+  }
   cart = {}; save(); view = 'done'; $('#drT').textContent = 'Готово!';
-  $('#drB').innerHTML = `<div class="done" role="status"><b aria-hidden="true">🥐</b><h3>Спасибо, заказ принят!</h3><div class="ono">№ ${no}</div><p>${form.method === 'delivery' ? 'Привезём' : 'Будет готов к самовывозу'}: ${v.date.split('-').reverse().join('.')}, ${esc(v.time)}.</p><p>Мы перезвоним, чтобы подтвердить заказ.</p><p style="font-size:12.5px;opacity:.7">Демо-режим: заказ никуда не отправлен.</p><button class="go" data-close-dr>Вернуться к меню</button></div>`;
+  $('#drB').innerHTML = `<div class="done" role="status"><b aria-hidden="true">🥐</b><h3>Спасибо, заказ принят!</h3><div class="ono">№ ${no}</div><p>${form.method === 'delivery' ? 'Привезём' : 'Будет готов к самовывозу'}: ${v.date.split('-').reverse().join('.')}, ${esc(v.time)}.</p><p>Мы перезвоним, чтобы подтвердить заказ.</p>${window.API_URL ? '' : '<p style="font-size:12.5px;opacity:.7">Демо-режим: заказ никуда не отправлен.</p>'}<button class="go" data-close-dr>Вернуться к меню</button></div>`;
   $('#drF').innerHTML = ''; refresh();
 }
 
@@ -481,6 +509,7 @@ addEventListener('scroll', fnav, { passive: true });
 const io = 'IntersectionObserver' in window ? new IntersectionObserver(es => es.forEach(x => { if (x.isIntersecting){ x.target.classList.add('in'); io.unobserve(x.target); } }), { threshold: .1 }) : null;
 $$('.reveal').forEach(el => io ? io.observe(el) : el.classList.add('in'));
 
+if (window.API_URL) $$('.demo').forEach(d => d.remove());
 fill(); refresh(); fnav();
 if (window.AFTER) window.AFTER();
 })();

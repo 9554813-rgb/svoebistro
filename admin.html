@@ -1,0 +1,304 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>Админ-панель · Своё бистро</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&family=Playfair+Display:wght@600&display=swap" rel="stylesheet">
+<script>
+/* ===== НАСТРОЙКА =====
+   Можно вписать адрес сервера сюда (ссылка веб-приложения Apps Script, …/exec),
+   а можно ввести его прямо на экране входа — он запомнится в этом браузере.
+   Ключ (ADMIN_KEY) сюда НЕ вписывайте — его вводят при входе. */
+const DEFAULT_API_URL = '';
+</script>
+<style>
+:root{--bg:#F6F3EE;--p:#fff;--k:#1E1E1E;--k2:#6A665F;--ln:#E9E2D8;--o:#E8641B;--o-d:#CF5410;--g:#2C4A1E;--r:14px;
+--s-new:#E8641B;--s-acc:#2F6FD6;--s-cook:#B7791F;--s-way:#7C4DCC;--s-ready:#0E8A7E;--s-done:#2C7A3F;--s-cancel:#8D8D8D}
+*{box-sizing:border-box}html,body{overflow-x:clip}
+body{margin:0;background:var(--bg);color:var(--k);font:14px/1.5 'Montserrat',system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+button,input,select{font:inherit}
+:focus-visible{outline:3px solid var(--o);outline-offset:2px}
+.wrap{max-width:1280px;margin:0 auto;padding:0 14px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:42px;padding:0 16px;border-radius:10px;border:0;background:var(--o);color:#fff;font-weight:700;cursor:pointer;text-decoration:none}
+.btn:hover{background:var(--o-d)}.btn.ghost{background:var(--p);color:var(--k);border:1px solid var(--ln)}.btn.ghost:hover{border-color:var(--k)}
+.btn.sm{min-height:34px;padding:0 12px;font-size:13px;border-radius:8px}.btn:disabled{opacity:.55;cursor:wait}
+/* Вход */
+.login{min-height:100vh;display:grid;place-items:center;padding:20px}
+.card{background:var(--p);border-radius:20px;padding:26px;width:min(460px,100%);box-shadow:0 20px 50px -30px rgba(0,0,0,.4)}
+.card h1{font:600 28px 'Playfair Display',serif;margin:0 0 4px}.card p{color:var(--k2);margin:0 0 18px}
+.fld{display:block;margin-bottom:12px}.fld span{display:block;font-weight:700;font-size:12.5px;margin-bottom:5px}
+.fld input{width:100%;min-height:46px;border:1.5px solid var(--ln);border-radius:10px;padding:0 12px;background:#fff}.fld input:focus{outline:none;border-color:var(--o)}
+.err{color:#B3261E;font-weight:600;font-size:13px;min-height:18px;margin:4px 0 8px}
+.links{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.help{margin-top:16px;border-top:1px solid var(--ln);padding-top:14px}
+.help summary{cursor:pointer;font-weight:700}
+.help ol{padding-left:20px;margin:10px 0 0}.help li{margin-bottom:8px}.help code{background:#F3EEE6;padding:1px 6px;border-radius:5px;font-size:12.5px}
+/* Шапка */
+.top{position:sticky;top:0;z-index:20;background:rgba(246,243,238,.95);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-bottom:1px solid var(--ln)}
+.top-in{display:flex;flex-wrap:wrap;align-items:center;gap:10px;min-height:64px;padding-top:8px;padding-bottom:8px}
+.brand{font:600 21px 'Playfair Display',serif;margin-right:auto}.brand small{display:block;font:600 11px 'Montserrat';color:var(--k2);letter-spacing:.06em;text-transform:uppercase}
+.upd{font-size:12.5px;color:var(--k2)}.dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#2C7A3F;margin-right:6px;vertical-align:1px}.dot.off{background:#B3261E}
+.demo-badge{background:#FFF0C2;color:#6B4E00;border-radius:999px;padding:4px 10px;font-weight:700;font-size:12px}
+/* Вкладки, фильтры */
+.bar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;padding:14px 0 6px}
+.tabs{display:flex;background:var(--p);border:1px solid var(--ln);border-radius:12px;padding:3px}
+.tab{border:0;background:none;padding:9px 16px;border-radius:9px;font-weight:700;cursor:pointer;color:var(--k2);display:flex;gap:8px;align-items:center}
+.tab.on{background:var(--k);color:#fff}.tab .n{background:var(--o);color:#fff;border-radius:999px;font-size:11px;padding:1px 7px;min-width:20px;text-align:center}.tab .n:empty{display:none}
+.search{flex:1 1 220px;min-width:0}.search input{width:100%;min-height:42px;border:1px solid var(--ln);border-radius:10px;padding:0 12px;background:var(--p)}.search input:focus{outline:none;border-color:var(--o)}
+.chips{display:flex;flex-wrap:wrap;gap:6px;padding:6px 0 12px}
+.chip{border:1px solid var(--ln);background:var(--p);border-radius:999px;padding:6px 12px;font-size:12.5px;font-weight:600;cursor:pointer;color:var(--k)}
+.chip.on{background:var(--k);color:#fff;border-color:var(--k)}.chip b{margin-left:4px;opacity:.7}
+.stats{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin:4px 0 14px}@media(min-width:800px){.stats{grid-template-columns:repeat(4,1fr)}}
+.st{background:var(--p);border:1px solid var(--ln);border-radius:12px;padding:12px 14px}.st small{display:block;color:var(--k2);font-size:12px}.st b{font-size:22px}
+/* Карточки */
+.grid{display:grid;gap:12px;padding-bottom:40px}@media(min-width:760px){.grid{grid-template-columns:repeat(2,1fr)}}@media(min-width:1180px){.grid{grid-template-columns:repeat(3,1fr)}}
+.it{background:var(--p);border:1px solid var(--ln);border-left:5px solid var(--sc,#999);border-radius:var(--r);padding:14px;display:flex;flex-direction:column;gap:8px;min-width:0}
+.it.fresh{animation:flash 2.4s ease}@keyframes flash{0%,40%{box-shadow:0 0 0 4px rgba(232,100,27,.35)}100%{box-shadow:none}}
+.it-h{display:flex;align-items:flex-start;gap:8px}.it-h h3{margin:0;font-size:17px}.it-h small{display:block;color:var(--k2);font-size:12px}
+.badge{margin-left:auto;background:var(--sc,#999);color:#fff;border-radius:999px;padding:3px 10px;font-weight:700;font-size:12px;white-space:nowrap}
+.row{display:flex;gap:8px;align-items:flex-start;font-size:13.5px;min-width:0}.row i{font-style:normal;flex:none;width:18px;text-align:center}.row span,.row a{min-width:0;overflow-wrap:anywhere}
+.row a{color:var(--k);font-weight:700}
+.items{background:#FAF7F2;border-radius:10px;padding:8px 10px;font-size:13px;white-space:pre-line}
+.sum{display:flex;justify-content:space-between;font-weight:800;font-size:15px}.sum small{font-weight:500;color:var(--k2);font-size:12px}
+.cm{background:#FFF7E6;border-radius:10px;padding:7px 10px;font-size:13px}
+.acts{display:flex;flex-wrap:wrap;gap:6px;margin-top:auto;padding-top:4px}
+.acts select{min-height:34px;border:1px solid var(--ln);border-radius:8px;padding:0 8px;background:#fff;font-size:13px;flex:1 1 140px;min-width:0}
+.empty{text-align:center;color:var(--k2);padding:50px 10px;grid-column:1/-1}
+.toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%) translateY(20px);background:var(--k);color:#fff;padding:12px 18px;border-radius:12px;font-weight:600;opacity:0;transition:.25s;z-index:50;max-width:calc(100% - 28px)}
+.toast.show{opacity:1;transform:translateX(-50%)}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+
+<!-- ============ ВХОД ============ -->
+<section class="login" id="login" hidden>
+  <div class="card">
+    <h1>Своё бистро</h1>
+    <p>Админ-панель заказов и броней</p>
+    <form id="loginForm" novalidate>
+      <label class="fld"><span>Адрес сервера (ссылка веб-приложения …/exec)</span><input id="lUrl" type="url" placeholder="https://script.google.com/macros/s/…/exec" autocomplete="off"></label>
+      <label class="fld"><span>Ключ доступа (ADMIN_KEY)</span><input id="lKey" type="password" autocomplete="current-password"></label>
+      <div class="err" id="lErr" role="alert"></div>
+      <button class="btn" style="width:100%" id="lBtn">Войти</button>
+    </form>
+    <div class="links"><button class="btn ghost sm" id="demoBtn">Посмотреть на демо-данных</button></div>
+    <details class="help">
+      <summary>Как подключить (10–15 минут)</summary>
+      <ol>
+        <li><b>Бот.</b> В Telegram откройте <b>@BotFather</b> → <code>/newbot</code> → придумайте имя. Скопируйте <b>токен</b>.</li>
+        <li><b>Чат.</b> Напишите своему боту любое сообщение. Для общего чата персонала — создайте группу и добавьте туда бота.</li>
+        <li><b>Таблица.</b> Создайте новую Google Таблицу → <b>Расширения → Apps Script</b>. Удалите всё в редакторе и вставьте код из файла <code>Code.gs</code>. Сохраните.</li>
+        <li><b>Свойства.</b> Слева ⚙ <b>Настройки проекта → Свойства скрипта</b>: добавьте <code>TG_TOKEN</code> (токен) и <code>ADMIN_KEY</code> (придумайте длинный пароль).</li>
+        <li><b>Первый запуск.</b> Вверху выберите функцию <code>setup</code> → <b>Выполнить</b> → разрешите доступ. Появятся листы «Заказы» и «Брони».</li>
+        <li><b>id чата.</b> Выполните функцию <code>findChatId</code> — в журнале появится id. Добавьте свойство <code>TG_CHAT_ID</code> с этим числом. Выполните <code>testTelegram</code> — придёт сообщение.</li>
+        <li><b>Публикация.</b> <b>Начать развёртывание → Новое развёртывание → Веб-приложение</b>: «Выполнять от имени — я», «Доступ — все». Скопируйте ссылку <code>…/exec</code>.</li>
+        <li><b>Сайт.</b> Откройте файл сайта в Блокноте, в самом начале найдите <code>window.API_URL = ''</code> и вставьте ссылку между кавычками.</li>
+        <li><b>Админка.</b> Вставьте ту же ссылку и ключ на этом экране. Готово!</li>
+      </ol>
+      <p style="margin:8px 0 0;font-size:12.5px">После правки кода скрипта нужно «Развёртывание → Управление → ✎ → Новая версия», иначе изменения не применятся.</p>
+    </details>
+  </div>
+</section>
+
+<!-- ============ ПАНЕЛЬ ============ -->
+<section id="app" hidden>
+  <header class="top"><div class="wrap top-in">
+    <div class="brand">Своё бистро<small>заказы и брони</small></div>
+    <span class="demo-badge" id="demoBadge" hidden>Демо-данные</span>
+    <span class="upd" id="upd"><span class="dot"></span>…</span>
+    <button class="btn ghost sm" id="soundBtn" aria-pressed="true" title="Звук при новом заказе">🔔 Звук</button>
+    <button class="btn ghost sm" id="refreshBtn">↻ Обновить</button>
+    <button class="btn ghost sm" id="logoutBtn">Выйти</button>
+  </div></header>
+  <main class="wrap">
+    <div class="bar">
+      <div class="tabs" role="tablist">
+        <button class="tab on" data-tab="orders" role="tab" aria-selected="true">🧾 Заказы <span class="n" id="nOrders"></span></button>
+        <button class="tab" data-tab="bookings" role="tab" aria-selected="false">📅 Брони <span class="n" id="nBookings"></span></button>
+      </div>
+      <label class="search"><span class="sr" hidden>Поиск</span><input id="q" type="search" placeholder="Поиск: номер, имя, телефон, адрес…" autocomplete="off"></label>
+    </div>
+    <div class="stats" id="stats"></div>
+    <div class="chips" id="chips"></div>
+    <div class="grid" id="grid" aria-live="polite"></div>
+  </main>
+</section>
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+/* ===================== Состояние ===================== */
+const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const store = { get: k => { try { return localStorage.getItem('sb-admin-' + k); } catch(e){ return null; } }, set: (k, v) => { try { v == null ? localStorage.removeItem('sb-admin-' + k) : localStorage.setItem('sb-admin-' + k, v); } catch(e){} } };
+let API = store.get('url') || DEFAULT_API_URL, KEY = store.get('key') || '', DEMO = false;
+let data = { orders: [], bookings: [], statuses: { orders: [], bookings: [] } };
+let tab = 'orders', filter = 'active', known = null, timer = null, sound = store.get('sound') !== 'off';
+
+const COLORS = { 'Новый':'--s-new','Новая':'--s-new','Принят':'--s-acc','Подтверждена':'--s-acc','Готовится':'--s-cook','В доставке':'--s-way','Готов к выдаче':'--s-ready','Выполнен':'--s-done','Гости пришли':'--s-done','Отменён':'--s-cancel','Отменена':'--s-cancel' };
+const FINAL = ['Выполнен','Отменён','Гости пришли','Отменена'];
+// «следующий шаг» для большой кнопки
+function nextStatus(item, kind){
+  const s = item.status;
+  if (kind === 'bookings') return { 'Новая':'Подтверждена', 'Подтверждена':'Гости пришли' }[s];
+  if (s === 'Новый') return 'Принят';
+  if (s === 'Принят') return 'Готовится';
+  if (s === 'Готовится') return item.method === 'Самовывоз' ? 'Готов к выдаче' : 'В доставке';
+  if (s === 'В доставке' || s === 'Готов к выдаче') return 'Выполнен';
+}
+
+/* ===================== Сервер ===================== */
+async function apiList(){
+  const r = await fetch(`${API}${API.includes('?') ? '&' : '?'}action=list&key=${encodeURIComponent(KEY)}&t=${Date.now()}`);
+  const j = await r.json();
+  if (!j.ok) throw new Error(j.error === 'auth' ? 'Неверный ключ доступа' : (j.error || 'Ошибка сервера'));
+  return j;
+}
+async function apiStatus(kind, number, status){
+  const r = await fetch(API, { method:'POST', headers:{ 'Content-Type':'text/plain;charset=utf-8' }, body: JSON.stringify({ action:'status', key:KEY, kind: kind === 'bookings' ? 'booking' : 'order', number, status }) });
+  const j = await r.json(); if (!j.ok) throw new Error(j.error === 'auth' ? 'Неверный ключ доступа' : (j.error || 'Ошибка сервера')); return j;
+}
+
+/* ===================== Загрузка ===================== */
+async function load(manual){
+  if (DEMO){ render(); return; }
+  try {
+    const j = await apiList();
+    const ids = new Set([...j.orders.map(o => 'o' + o.number), ...j.bookings.map(b => 'b' + b.number)]);
+    const fresh = known ? [...ids].filter(x => !known.has(x)) : [];
+    known = ids; data = j;
+    $('#upd').innerHTML = `<span class="dot"></span>обновлено ${new Date().toLocaleTimeString('ru-RU', { hour:'2-digit', minute:'2-digit' })}`;
+    render(new Set(fresh));
+    if (fresh.length){ ping(); toast(`Новых: ${fresh.length}`); }
+    if (manual) toast('Обновлено');
+  } catch(err){
+    $('#upd').innerHTML = `<span class="dot off"></span>нет связи`;
+    if (err.message === 'Неверный ключ доступа'){ logout(); $('#lErr').textContent = err.message; }
+    else if (manual) toast('Не удалось обновить: ' + err.message);
+  }
+}
+
+/* ===================== Отрисовка ===================== */
+function render(fresh = new Set()){
+  const list = data[tab] || [], statuses = data.statuses[tab] || [];
+  const newWord = tab === 'orders' ? 'Новый' : 'Новая';
+  const cntNew = k => (data[k] || []).filter(x => x.status === (k === 'orders' ? 'Новый' : 'Новая')).length;
+  $('#nOrders').textContent = cntNew('orders') || ''; $('#nBookings').textContent = cntNew('bookings') || '';
+  const totalNew = cntNew('orders') + cntNew('bookings');
+  document.title = (totalNew ? `(${totalNew}) ` : '') + 'Админ-панель · Своё бистро';
+
+  // статистика за сегодня
+  const today = new Date().toLocaleDateString('ru-RU');
+  const td = list.filter(x => String(x.created).startsWith(today));
+  if (tab === 'orders'){
+    const sumT = td.filter(x => x.status !== 'Отменён').reduce((s, x) => s + (+x.total || 0), 0);
+    $('#stats').innerHTML = st('Заказов сегодня', td.length) + st('Выручка сегодня', money(sumT)) + st('Ждут ответа', list.filter(x => x.status === 'Новый').length) + st('В работе', list.filter(x => !FINAL.includes(x.status) && x.status !== 'Новый').length);
+  } else {
+    const upcoming = list.filter(x => !FINAL.includes(x.status) && x.date >= isoToday());
+    $('#stats').innerHTML = st('Заявок сегодня', td.length) + st('Ждут звонка', list.filter(x => x.status === 'Новая').length) + st('Предстоящие', upcoming.length) + st('На сегодня', upcoming.filter(x => x.date === isoToday()).length);
+  }
+
+  // фильтры по статусу
+  const chips = [['active','Активные', list.filter(x => !FINAL.includes(x.status)).length], ['all','Все', list.length], ...statuses.map(s => [s, s, list.filter(x => x.status === s).length])];
+  $('#chips').innerHTML = chips.map(([v, t, n]) => `<button class="chip ${filter === v ? 'on' : ''}" data-f="${esc(v)}">${esc(t)}<b>${n}</b></button>`).join('');
+
+  const q = $('#q').value.trim().toLowerCase();
+  let items = list.filter(x => filter === 'all' ? true : filter === 'active' ? !FINAL.includes(x.status) : x.status === filter);
+  if (q) items = items.filter(x => Object.values(x).join(' ').toLowerCase().includes(q));
+  if (tab === 'bookings') items.sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time) * (filter === 'active' ? 1 : -1));
+  $('#grid').innerHTML = items.length ? items.map(x => tab === 'orders' ? orderCard(x, statuses, fresh.has('o' + x.number)) : bookingCard(x, statuses, fresh.has('b' + x.number))).join('')
+    : `<div class="empty">${list.length ? 'Ничего не найдено по фильтру' : (tab === 'orders' ? 'Заказов пока нет' : 'Броней пока нет')}</div>`;
+}
+const st = (t, v) => `<div class="st"><small>${t}</small><b>${v}</b></div>`;
+const money = n => (+n || 0).toLocaleString('ru-RU') + ' ₽';
+const isoToday = () => { const d = new Date(); d.setMinutes(d.getMinutes() - d.getTimezoneOffset()); return d.toISOString().slice(0, 10); };
+const dmy = s => /^\d{4}-\d{2}-\d{2}$/.test(s || '') ? s.split('-').reverse().join('.') : esc(s);
+const tel = p => `<a href="tel:${esc(String(p).replace(/[^\d+]/g, ''))}">${esc(p)}</a>`;
+function actions(x, statuses, kind){
+  const nx = nextStatus(x, kind);
+  return `<div class="acts">${nx ? `<button class="btn sm" data-set="${esc(nx)}" data-num="${esc(x.number)}">→ ${esc(nx)}</button>` : ''}
+    <select data-num="${esc(x.number)}" aria-label="Сменить статус">${statuses.map(s => `<option ${s === x.status ? 'selected' : ''}>${esc(s)}</option>`).join('')}</select></div>`;
+}
+function orderCard(x, statuses, fresh){
+  return `<article class="it ${fresh ? 'fresh' : ''}" style="--sc:var(${COLORS[x.status] || '--s-cancel'})">
+    <div class="it-h"><div><h3>№ ${esc(x.number)}</h3><small>создан ${esc(x.created)}${x.updated && x.updated !== x.created ? ` · изм. ${esc(x.updated)}` : ''}</small></div><span class="badge">${esc(x.status)}</span></div>
+    <div class="row"><i>${x.method === 'Самовывоз' ? '🏃' : '🛵'}</i><span><b>${esc(x.method)}</b> · ${dmy(x.date)}, ${esc(x.time)}</span></div>
+    <div class="row"><i>👤</i><span>${esc(x.name)} · ${tel(x.phone)}</span></div>
+    ${x.address ? `<div class="row"><i>📍</i><span>${esc(x.address)}</span></div>` : ''}
+    <div class="items">${esc(x.items)}</div>
+    <div class="sum"><span>Итого <small>${money(x.subtotal)}${+x.delivery ? ' + доставка ' + money(x.delivery) : ''}</small></span><span>${money(x.total)}</span></div>
+    ${x.comment ? `<div class="cm">💬 ${esc(x.comment)}</div>` : ''}
+    ${actions(x, statuses, 'orders')}</article>`;
+}
+function bookingCard(x, statuses, fresh){
+  return `<article class="it ${fresh ? 'fresh' : ''}" style="--sc:var(${COLORS[x.status] || '--s-cancel'})">
+    <div class="it-h"><div><h3>${esc(x.number)} · ${dmy(x.date)} в ${esc(x.time)}</h3><small>заявка ${esc(x.created)}</small></div><span class="badge">${esc(x.status)}</span></div>
+    <div class="row"><i>👥</i><span>${esc(x.guests)}</span></div>
+    <div class="row"><i>👤</i><span>${esc(x.name || 'без имени')} · ${tel(x.phone)}</span></div>
+    ${x.comment ? `<div class="cm">💬 ${esc(x.comment)}</div>` : ''}
+    ${actions(x, statuses, 'bookings')}</article>`;
+}
+
+/* ===================== Смена статуса ===================== */
+async function change(number, status, el){
+  const item = (data[tab] || []).find(x => String(x.number) === String(number)); if (!item || item.status === status) return;
+  const prev = item.status; item.status = status; render();             // сразу показываем, потом подтверждаем
+  if (DEMO){ toast(`№ ${number}: ${status}`); return; }
+  try { const j = await apiStatus(tab, number, status); item.updated = j.updated; toast(`№ ${number}: ${status}`); }
+  catch(err){ item.status = prev; render(); toast('Не сохранилось: ' + err.message); }
+}
+
+/* ===================== Звук и уведомления ===================== */
+function ping(){
+  if (!sound) return;
+  try { const a = new (window.AudioContext || window.webkitAudioContext)(); [0, .18].forEach((t, i) => { const o = a.createOscillator(), g = a.createGain(); o.frequency.value = i ? 1046 : 784; o.connect(g); g.connect(a.destination); g.gain.setValueAtTime(.0001, a.currentTime + t); g.gain.exponentialRampToValueAtTime(.25, a.currentTime + t + .02); g.gain.exponentialRampToValueAtTime(.0001, a.currentTime + t + .25); o.start(a.currentTime + t); o.stop(a.currentTime + t + .3); }); } catch(e){}
+}
+let tt; function toast(t){ const el = $('#toast'); el.textContent = t; el.classList.add('show'); clearTimeout(tt); tt = setTimeout(() => el.classList.remove('show'), 2600); }
+
+/* ===================== Вход / выход ===================== */
+function showApp(){ $('#login').hidden = true; $('#app').hidden = false; $('#demoBadge').hidden = !DEMO; load(); clearInterval(timer); if (!DEMO) timer = setInterval(load, 20000); }
+function logout(){ clearInterval(timer); KEY = ''; DEMO = false; known = null; store.set('key', null); $('#app').hidden = true; $('#login').hidden = false; $('#lUrl').value = API; }
+$('#loginForm').addEventListener('submit', async e => {
+  e.preventDefault(); const btn = $('#lBtn'), er = $('#lErr');
+  const url = $('#lUrl').value.trim(), key = $('#lKey').value.trim();
+  if (!/^https:\/\/script\.google(usercontent)?\.com\//.test(url)){ er.textContent = 'Вставьте ссылку веб-приложения Apps Script (начинается с https://script.google.com/…)'; return; }
+  if (!key){ er.textContent = 'Введите ключ доступа'; return; }
+  API = url; KEY = key; btn.disabled = true; btn.textContent = 'Проверяем…'; er.textContent = '';
+  try { await apiList(); store.set('url', API); store.set('key', KEY); DEMO = false; showApp(); }
+  catch(err){ er.textContent = err.message === 'Failed to fetch' ? 'Сервер не отвечает. Проверьте ссылку и что доступ к веб-приложению — «Все».' : err.message; }
+  finally { btn.disabled = false; btn.textContent = 'Войти'; }
+});
+$('#demoBtn').addEventListener('click', () => { DEMO = true; data = demoData(); showApp(); });
+$('#logoutBtn').addEventListener('click', logout);
+$('#refreshBtn').addEventListener('click', () => load(true));
+$('#soundBtn').addEventListener('click', e => { sound = !sound; store.set('sound', sound ? 'on' : 'off'); e.currentTarget.setAttribute('aria-pressed', sound); e.currentTarget.textContent = sound ? '🔔 Звук' : '🔕 Без звука'; if (sound) ping(); });
+$$('.tab').forEach(t => t.addEventListener('click', () => { tab = t.dataset.tab; filter = 'active'; $$('.tab').forEach(x => { x.classList.toggle('on', x === t); x.setAttribute('aria-selected', x === t); }); render(); }));
+$('#chips').addEventListener('click', e => { const c = e.target.closest('[data-f]'); if (c){ filter = c.dataset.f; render(); } });
+$('#q').addEventListener('input', () => render());
+$('#grid').addEventListener('click', e => { const b = e.target.closest('[data-set]'); if (b) change(b.dataset.num, b.dataset.set); });
+$('#grid').addEventListener('change', e => { const s = e.target.closest('select[data-num]'); if (s) change(s.dataset.num, s.value); });
+
+/* Демо-данные — только для показа, явно помечены в шапке */
+function demoData(){
+  const t = isoToday(), d = new Date().toLocaleDateString('ru-RU');
+  return { statuses: { orders: ['Новый','Принят','Готовится','В доставке','Готов к выдаче','Выполнен','Отменён'], bookings: ['Новая','Подтверждена','Гости пришли','Отменена'] },
+    orders: [
+      { number:'1004', created:d + ' 12:41', status:'Новый', method:'Доставка', name:'Тестовый гость', phone:'+7 (900) 000-00-01', address:'ул. Пример, 1, кв. 1', date:t, time:'Как можно скорее', items:'Крок мадам × 1 = 590 ₽\nКапучино × 2 = 480 ₽\nКруассан классический × 2 = 360 ₽', subtotal:1430, delivery:150, total:1580, comment:'Демо: домофон 12', updated:d + ' 12:41' },
+      { number:'1003', created:d + ' 12:15', status:'Готовится', method:'Самовывоз', name:'Тестовый гость', phone:'+7 (900) 000-00-02', address:'', date:t, time:'13:00–14:00', items:'Смэш-бургер × 2 = 1 260 ₽\nЛимонад «Lapochka» × 2 = 600 ₽', subtotal:1860, delivery:0, total:1860, comment:'', updated:d + ' 12:20' },
+      { number:'1002', created:d + ' 11:02', status:'В доставке', method:'Доставка', name:'Тестовый гость', phone:'+7 (900) 000-00-03', address:'ул. Пример, 5', date:t, time:'11:00–12:00', items:'Синнабон вишня / шоколад × 4 = 1 440 ₽', subtotal:1440, delivery:150, total:1590, comment:'', updated:d + ' 11:30' },
+      { number:'1001', created:d + ' 09:10', status:'Выполнен', method:'Самовывоз', name:'Тестовый гость', phone:'+7 (900) 000-00-04', address:'', date:t, time:'Как можно скорее', items:'Сырники × 1 = 580 ₽\nФильтр-кофе × 1 = 200 ₽', subtotal:780, delivery:0, total:780, comment:'', updated:d + ' 09:40' } ],
+    bookings: [
+      { number:'Б-102', created:d + ' 10:05', status:'Новая', date:t, time:'19:00', guests:'4 гостя', name:'Тестовый гость', phone:'+7 (900) 000-00-05', comment:'', updated:d + ' 10:05' },
+      { number:'Б-101', created:d + ' 09:30', status:'Подтверждена', date:t, time:'13:30', guests:'2 гостя', name:'Тестовый гость', phone:'+7 (900) 000-00-06', comment:'', updated:d + ' 09:50' } ] };
+}
+
+/* Старт */
+$('#soundBtn').textContent = sound ? '🔔 Звук' : '🔕 Без звука';
+$('#lUrl').value = API;
+if (API && KEY) showApp(); else $('#login').hidden = false;
+</script>
+</body>
+</html>
